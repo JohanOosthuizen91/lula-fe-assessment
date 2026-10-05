@@ -28,5 +28,6 @@ export function StatusPill({ status }: { status: AssessmentStatus | Unrecognised
 }
 
 export function ReasonChip({ reason }: { reason: AttentionReason }) {
-  return <span className="chip">{reasonLabel(reason)}</span>
+  // Pending needs action rather than signalling risk, so it uses the pending colour, not the attention red.
+  return <span className={reason.code === 'pending' ? 'chip chip--pending' : 'chip'}>{reasonLabel(reason)}</span>
 }

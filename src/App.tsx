@@ -2,14 +2,17 @@ import { forwardRef, useEffect, useRef } from 'react'
 import { useBusinessRows } from './api/queries.ts'
 import { useSelection } from './hooks/useSelection.ts'
 import { sortForReview, summarise } from './lib/rows.ts'
-import type { BusinessRow } from './lib/rows.ts'
 import type { Selection } from './lib/selection.ts'
+import { AssessmentDetail } from './components/AssessmentDetail.tsx'
 import { BusinessList } from './components/BusinessList.tsx'
 import { ErrorMessage } from './components/ErrorMessage.tsx'
 import { SummaryStrip } from './components/SummaryStrip.tsx'
 
-/** Below 1200px the detail stacks under the list. Must match the media query in styles/app.css. */
-export const STACKED_LAYOUT_QUERY = '(max-width: 1199px)'
+/**
+ * From 1200px the detail sits beside the list; below that it stacks. This is the exact media query in
+ * styles/app.css, and "stacked" is its opposite, so the two can never disagree (even at a zoomed 1199.5px).
+ */
+export const SIDE_BY_SIDE_QUERY = '(min-width: 1200px)'
 
 type FocusRequest = { target: 'detail' } | { target: 'row'; businessId: number }
 
@@ -37,7 +40,7 @@ export function App() {
 
   function openBusiness(businessId: number) {
     // Side by side, the detail is already in view, so focus stays on the list.
-    if (!window.matchMedia(STACKED_LAYOUT_QUERY).matches) {
+    if (window.matchMedia(SIDE_BY_SIDE_QUERY).matches) {
       select(businessId)
       return
     }
@@ -79,7 +82,7 @@ export function App() {
                 <BusinessList rows={sortForReview(rowsQuery.data)} selectedId={selectedId} onSelect={openBusiness} />
               </section>
               {showPanel ? (
-                <SelectionPanel ref={detailRef} selection={selection} rows={rowsQuery.data} onClose={backToList} />
+                <SelectionPanel ref={detailRef} selection={selection} onClose={backToList} />
               ) : null}
             </div>
           </>
@@ -89,26 +92,18 @@ export function App() {
   )
 }
 
-type SelectionPanelProps = { selection: Selection; rows: readonly BusinessRow[]; onClose: () => void }
+type SelectionPanelProps = { selection: Selection; onClose: () => void }
 
-const SelectionPanel = forwardRef<HTMLElement, SelectionPanelProps>(function SelectionPanel({ selection, rows, onClose }, ref) {
-  const row = selection.kind === 'business' ? rows.find((r) => r.business.id === selection.id) : undefined
+const SelectionPanel = forwardRef<HTMLElement, SelectionPanelProps>(function SelectionPanel({ selection, onClose }, ref) {
   return (
     <section ref={ref} tabIndex={-1} className="panel detail-panel" aria-label="Assessment">
       <button type="button" className="button button--quiet" onClick={onClose}>
         Back to list
       </button>
-      {selection.kind === 'invalid' ? (
-        <p className="detail-message">This link doesn’t point to a business.</p>
-      ) : row === undefined ? (
-        <p className="detail-message">There’s no business with that id.</p>
+      {selection.kind === 'business' ? (
+        <AssessmentDetail key={selection.id} businessId={selection.id} />
       ) : (
-        <header className="detail-header">
-          <h2>{row.business.name}</h2>
-          <p className="detail-sub">
-            {row.business.industry} · Registration {row.business.registrationNumber}
-          </p>
-        </header>
+        <p className="detail-message">This link doesn’t point to a business.</p>
       )}
     </section>
   )

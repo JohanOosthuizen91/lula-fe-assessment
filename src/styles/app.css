@@ -73,7 +73,7 @@ code {
   align-items: start;
 }
 
-/* Side by side from 1200px; below that the detail stacks under the list. Keep in step with STACKED_LAYOUT_QUERY in App.tsx. */
+/* Side by side from 1200px; below that the detail stacks under the list. Must be identical to SIDE_BY_SIDE_QUERY in App.tsx. */
 @media (min-width: 1200px) {
   .layout--with-panel {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -160,6 +160,12 @@ code {
   color: var(--attention);
   font-size: 12px;
   font-weight: 600;
+}
+
+.chip--pending {
+  color: var(--status-pending);
+  background: var(--status-pending-soft);
+  border-color: var(--status-pending-soft);
 }
 
 /* Buttons and messages */
@@ -278,17 +284,15 @@ code {
   margin-top: var(--space-2);
 }
 
+/* Always two lines, whatever the band text: the score on top, the band pill under it, both right-aligned. */
 .list-score {
-  display: inline-flex;
-  gap: var(--space-2);
-  align-items: baseline;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  justify-items: end;
+  gap: var(--space-1);
 }
 
 .list-missing {
   color: var(--color-text-secondary);
-  font-style: italic;
 }
 
 /* Phone: each row becomes a small card, with the reasons still under the name. */
@@ -336,8 +340,9 @@ code {
     text-align: left;
   }
 
+  /* On a phone every cell in the card is left-aligned; the score and band keep the same two-line stack. */
   .list-score {
-    justify-content: flex-start;
+    justify-items: start;
   }
 }
 
@@ -361,4 +366,203 @@ code {
 
 .detail-message {
   color: var(--color-text-secondary);
+}
+
+.detail {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.detail-assessed {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detail-section h3,
+.attention h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.detail-caption {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.detail-missing {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Attention box */
+
+.attention {
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+}
+
+.attention--flagged {
+  border-color: var(--risk-high-soft);
+  border-left: 4px solid var(--attention);
+}
+
+.attention--flagged h3 {
+  color: var(--attention);
+}
+
+.attention--clear {
+  border-left: 4px solid var(--risk-low);
+}
+
+.attention--checking {
+  color: var(--color-text-secondary);
+}
+
+.attention ul {
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.attention-partial {
+  margin-bottom: var(--space-2);
+}
+
+/* Score */
+
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.score-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.warning {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--risk-medium-soft);
+  color: var(--risk-medium);
+}
+
+/* Bars: a width plus the value as text; the bar never carries the number alone. */
+
+.bar-track {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+}
+
+.bar--in {
+  background: var(--color-primary);
+}
+
+.bar--out {
+  background: var(--neutral);
+}
+
+/* Monthly financials */
+
+.money {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.money-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+}
+
+.money-row dd {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.money-row--net {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-weight: 700;
+}
+
+/* Categories */
+
+.categories {
+  list-style: none;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.category {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+}
+
+.category .bar-track {
+  grid-column: 1 / -1;
+}
+
+.category-value {
+  text-align: right;
+  font-weight: 600;
+}
+
+.category--weak .category-value,
+.category-flag {
+  color: var(--attention);
+}
+
+.category--weak .bar {
+  background: var(--attention);
+}
+
+.bar-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-text);
+}
+
+.bar-marker span {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+/* Room for the "40" label that hangs below each track, so the last one clears the caption. */
+.category {
+  padding-bottom: var(--space-4);
 }

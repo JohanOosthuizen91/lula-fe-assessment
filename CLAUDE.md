@@ -32,7 +32,7 @@ financial picture, and which need attention. A wrong or overconfident number is 
 ## Styling
 - Plain CSS in `src/styles/app.css`, with classes prefixed by component. Tokens from `src/brand.css`; add new tokens
   there, and no raw hex in components. No UI kit and no chart library: bars are a `<div>` width plus a text value.
-- Layout: a summary strip, then the business list beside a detail panel, stacking below 1200px (`STACKED_LAYOUT_QUERY` in `App.tsx` and the media query in `app.css` must match). When stacked, selecting a business moves focus to the detail; "Back to list" returns it to that business. Attention reasons stay visible at every width.
+- Layout: a summary strip, then the business list beside a detail panel, stacking below 1200px (`SIDE_BY_SIDE_QUERY` in `App.tsx` is the exact `app.css` media query, `(min-width: 1200px)`; stacked is its negation). When stacked, selecting a business moves focus to the detail; "Back to list" returns it to that business. Attention reasons stay visible at every width.
 - No markdown in on-screen text. Show commands in `<code>`, never with backticks inside a string.
 
 ## Regex

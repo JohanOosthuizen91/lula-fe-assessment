@@ -83,6 +83,18 @@ function BusinessListRow({ row, selected, onSelect }: { row: BusinessRow; select
   )
 }
 
+/** A muted placeholder, never 0. Screen readers hear why the value is missing instead of "dash". */
+function MissingValue({ pending }: { pending: boolean }) {
+  return (
+    <>
+      <span className="list-missing" aria-hidden="true">
+        {PLACEHOLDER}
+      </span>
+      <span className="visually-hidden">{pending ? "Not available: assessment pending" : "Not available"}</span>
+    </>
+  )
+}
+
 function isPending(row: BusinessRow): boolean {
   return row.assessment?.status === 'Pending'
 }
@@ -91,7 +103,7 @@ function ScoreCell({ row }: { row: BusinessRow }) {
   const score = row.creditReport?.score ?? null
   const band = row.creditReport?.riskBand ?? null
   if (score === null && band === null) {
-    return <span className="list-missing">{isPending(row) ? 'Awaiting assessment' : PLACEHOLDER}</span>
+    return <MissingValue pending={isPending(row)} />
   }
   return (
     <span className="list-score">
@@ -104,7 +116,7 @@ function ScoreCell({ row }: { row: BusinessRow }) {
 function NetCell({ row }: { row: BusinessRow }) {
   const { monthly } = row
   if (monthly === null) {
-    return <span className="list-missing">{isPending(row) ? 'Awaiting assessment' : PLACEHOLDER}</span>
+    return <MissingValue pending={isPending(row)} />
   }
   return (
     <>

@@ -6,15 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "api": "json-server data.json --port 3001"
+    "api": "json-server data.json --port 3001",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "oxlint --deny-warnings src",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@types/node": "24.19.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "^4.0.0",
     "json-server": "^0.17.4",
+    "oxlint": "1.86.0",
+    "typescript": "6.0.3",
     "vite": "^4.4.0"
   }
 }

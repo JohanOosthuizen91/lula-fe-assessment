@@ -17,27 +17,19 @@ export class ApiError extends Error {
   readonly kind: ApiErrorKind
   /** HTTP status, or null when there was no usable response. */
   readonly status: number | null
-  /** Plain-text next step for the analyst, if there is one. */
-  readonly hint: string | null
-
-  constructor(kind: ApiErrorKind, message: string, status: number | null = null, hint: string | null = null) {
+  constructor(kind: ApiErrorKind, message: string, status: number | null = null) {
     super(message)
     this.name = 'ApiError'
     this.kind = kind
     this.status = status
-    this.hint = hint
   }
 }
 
 export const API_START_COMMAND = 'npm run api'
 
 function unreachable(status: number | null): ApiError {
-  return new ApiError(
-    'unreachable',
-    'Can’t reach the assessments API.',
-    status,
-    `Is the API running? Start it with ${API_START_COMMAND}`,
-  )
+  // The screen adds the next step (start the API with API_START_COMMAND), showing the command in <code>.
+  return new ApiError('unreachable', 'Can’t reach the assessments API.', status)
 }
 
 export async function getJson<T>(path: string, parse: (raw: unknown) => T, signal?: AbortSignal): Promise<T> {
@@ -102,6 +94,13 @@ function finite(fields: Fields, key: string, where: string): number {
 
 function finiteOrNull(fields: Fields, key: string, where: string): number | null {
   return fields[key] === null ? null : finite(fields, key, where)
+}
+
+// A period total of money in or out can't be negative. A negative net is fine, but it's worked out here, never sent.
+function totalOrNull(fields: Fields, key: string, where: string): number | null {
+  const value = finiteOrNull(fields, key, where)
+  if (value !== null && value < 0) throw badShape(`${where}.${key}`, 'zero or more')
+  return value
 }
 
 // A known label, or the raw text marked as unrecognised. Only a non-text value is a structural error.
@@ -171,8 +170,8 @@ export function parseBankStatement(raw: unknown, where = 'bankStatement'): BankS
   return {
     id: id(f, 'id', where),
     assessmentId: id(f, 'assessmentId', where),
-    totalCredits: finiteOrNull(f, 'totalCredits', where),
-    totalDebits: finiteOrNull(f, 'totalDebits', where),
+    totalCredits: totalOrNull(f, 'totalCredits', where),
+    totalDebits: totalOrNull(f, 'totalDebits', where),
     monthsAnalysed: months,
   }
 }

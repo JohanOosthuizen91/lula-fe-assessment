@@ -4,9 +4,8 @@ import type { Assessment, BankStatement, CreditReport, ScoreItem } from '../api/
 import { useBankStatement, useBusiness, useCreditReport, useCurrentAssessment, useScoreItems } from '../api/queries.ts'
 import { ApiError } from '../api/client.ts'
 import { CATEGORY_THRESHOLD, attentionReasons, monthlyFinancials } from '../lib/assessment.ts'
-import type { MonthlyFinancials } from '../lib/assessment.ts'
 import { checkAttention, uncheckedText } from '../lib/attention.ts'
-import type { AttentionCheck, AttentionSection, SectionLoad } from '../lib/attention.ts'
+import type { AttentionCheck, SectionLoad, Unchecked } from '../lib/attention.ts'
 import {
   formatCategoryScore,
   formatCreditScore,
@@ -108,8 +107,8 @@ function AssessedLine({ query }: { query: UseQueryResult<Assessment | null> }) {
   if (assessment === null) return <p className="detail-assessed">Not assessed yet</p>
   return (
     <p className="detail-assessed">
-      {/* A pending assessment hasn't been assessed yet, so its date is when it started. */}
-      <StatusPill status={assessment.status} /> {assessment.status === 'Complete' ? 'Assessed' : 'Started'}{' '}
+      {/* Pending hasn't been assessed yet, so its date is when it started; an unrecognised status gets the neutral "Created". */}
+      <StatusPill status={assessment.status} /> {assessment.status === 'Complete' ? 'Assessed' : assessment.status === 'Pending' ? 'Started' : 'Created'}{' '}
       {formatDate(assessment.createdDate)} ·{' '}
       {formatMonthsAgo(assessment.createdDate)}
     </p>
@@ -139,7 +138,7 @@ function AssessmentSections({ assessment, reportQuery, statementQuery, itemsQuer
         {(report) => <ScoreSection report={report} pending={pending} />}
       </Section>
       <Section title="Monthly financials" query={statementQuery} what="bank statement">
-        {(statement) => <FinancialsSection monthly={monthlyFinancials(statement)} pending={pending} hasStatement={statement !== null} />}
+        {(statement) => <FinancialsSection statement={statement} pending={pending} />}
       </Section>
       <Section title="Score by category" query={itemsQuery} what="category scores">
         {(items) => <CategoriesSection items={items} pending={pending} />}
@@ -220,11 +219,11 @@ function AttentionBox({ check }: { check: AttentionCheck }) {
   }
 }
 
-function UncheckedList({ sections }: { sections: AttentionSection[] }) {
+function UncheckedList({ sections }: { sections: Unchecked[] }) {
   return (
     <ul className="attention-unchecked">
-      {sections.map((section) => (
-        <li key={section}>{uncheckedText(section)}</li>
+      {sections.map((item) => (
+        <li key={item.section}>{uncheckedText(item)}</li>
       ))}
     </ul>
   )
@@ -251,17 +250,10 @@ function ScoreSection({ report, pending }: { report: CreditReport | null; pendin
   )
 }
 
-function FinancialsSection({
-  monthly,
-  pending,
-  hasStatement,
-}: {
-  monthly: MonthlyFinancials | null
-  pending: boolean
-  hasStatement: boolean
-}) {
+function FinancialsSection({ statement, pending }: { statement: BankStatement | null; pending: boolean }) {
+  const monthly = monthlyFinancials(statement)
   if (monthly === null) {
-    const message = pending ? AWAITING : hasStatement ? 'The bank statement has no figures.' : 'No bank statement was returned.'
+    const message = pending ? AWAITING : statement !== null ? 'The bank statement has no figures.' : 'No bank statement was returned.'
     return <p className="detail-missing">{message}</p>
   }
   const { credits, debits, net, months, netShareOfCredits } = monthly
@@ -302,6 +294,11 @@ function FinancialsSection({
       <p className="detail-caption">
         Monthly average · {months} {months === 1 ? 'month' : 'months'} of statements · net movement is money in less money
         out, not profit
+      </p>
+      {/* The source totals, for reference; comparisons between businesses use the monthly averages above. */}
+      <p className="detail-caption">
+        Statement totals over {months} {months === 1 ? 'month' : 'months'}: {formatMoney(statement?.totalCredits ?? null)} in ·{' '}
+        {formatMoney(statement?.totalDebits ?? null)} out
       </p>
     </>
   )

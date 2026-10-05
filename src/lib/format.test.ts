@@ -7,7 +7,6 @@ import {
   formatCreditScore,
   formatDate,
   formatMoney,
-  formatMoneyCompact,
   formatMonthsAgo,
   formatPercent,
   formatTime,
@@ -34,18 +33,10 @@ describe('values that round to zero', () => {
   it('show no minus sign, while real negatives keep theirs', () => {
     assert.equal(formatMoney(-0), `R${NBSP}0,00`)
     assert.equal(formatMoney(-0.001), `R${NBSP}0,00`)
-    assert.equal(formatMoneyCompact(-0.001), `R${NBSP}0`)
     assert.equal(formatPercent(-0.0001), '0,0%')
     assert.equal(formatPercent(-0), '0,0%')
     assert.equal(formatMoney(-3000), `-R${NBSP}3${NBSP}000,00`)
     assert.equal(formatPercent(-0.07), '-7,0%')
-  })
-})
-
-describe('formatMoneyCompact', () => {
-  it('abbreviates with one decimal', () => {
-    assert.equal(formatMoneyCompact(206666.67), 'R\u00a0206,7K')
-    assert.equal(formatMoneyCompact(1240000), 'R\u00a01,2M')
   })
 })
 
@@ -122,7 +113,6 @@ describe('formatTime', () => {
 describe('missing values', () => {
   it('every formatter shows the placeholder for null, never 0', () => {
     assert.equal(formatMoney(null), PLACEHOLDER)
-    assert.equal(formatMoneyCompact(null), PLACEHOLDER)
     assert.equal(formatCreditScore(null), PLACEHOLDER)
     assert.equal(formatCategoryScore(null), PLACEHOLDER)
     assert.equal(formatPercent(null), PLACEHOLDER)

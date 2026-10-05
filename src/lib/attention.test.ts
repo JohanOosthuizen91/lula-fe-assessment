@@ -24,7 +24,7 @@ describe('checkAttention', () => {
       bankStatement: { status: 'failed' },
       scoreItems: { status: 'loaded', data: acmeItems },
     })
-    assert.deepEqual(result, { kind: 'not-fully-checked', unchecked: ['bank statement'] })
+    assert.deepEqual(result, { kind: 'not-fully-checked', unchecked: [{ section: 'bank statement', why: 'failed' }] })
     assert.notEqual(result.kind, 'clear')
   })
 
@@ -48,7 +48,40 @@ describe('checkAttention', () => {
     assert.equal(result.kind, 'flagged')
     if (result.kind !== 'flagged') return
     assert.deepEqual(result.reasons.map((r) => r.code), ['low-net-share'])
-    assert.deepEqual(result.unchecked, ['credit report', 'category scores'])
+    assert.deepEqual(result.unchecked, [
+      { section: 'credit report', why: 'failed' },
+      { section: 'category scores', why: 'failed' },
+    ])
+  })
+
+  it('never gives an all-clear when a completed assessment loaded without the data its rules need', () => {
+    const result = checkAttention({
+      assessment: acme,
+      creditReport: { status: 'loaded', data: null },
+      bankStatement: { status: 'loaded', data: acmeStatement },
+      scoreItems: { status: 'loaded', data: [] },
+    })
+    assert.deepEqual(result, {
+      kind: 'not-fully-checked',
+      unchecked: [
+        { section: 'credit report', why: 'empty' },
+        { section: 'category scores', why: 'empty' },
+      ],
+    })
+  })
+
+  it('does not repeat emptiness for a pending assessment, which is flagged as pending', () => {
+    const echo: Assessment = { id: 105, businessId: 5, createdDate: '2024-11-22', status: 'Pending' }
+    const result = checkAttention({
+      assessment: echo,
+      creditReport: { status: 'loaded', data: { id: 205, assessmentId: 105, score: null, riskBand: null, isThinFile: null } },
+      bankStatement: {
+        status: 'loaded',
+        data: { id: 305, assessmentId: 105, totalCredits: null, totalDebits: null, monthsAnalysed: null },
+      },
+      scoreItems: { status: 'loaded', data: [] },
+    })
+    assert.deepEqual(result, { kind: 'flagged', reasons: [{ code: 'pending' }], unchecked: [] })
   })
 
   it('waits while any section is still loading', () => {
@@ -64,8 +97,14 @@ describe('checkAttention', () => {
 
 describe('uncheckedText', () => {
   it('names the rules that couldn’t be checked and why', () => {
-    assert.equal(uncheckedText('bank statement'), 'Couldn’t check monthly net: the bank statement didn’t load.')
-    assert.equal(uncheckedText('credit report'), 'Couldn’t check risk band and thin file: the credit report didn’t load.')
-    assert.equal(uncheckedText('category scores'), 'Couldn’t check categories: the category scores didn’t load.')
+    assert.equal(uncheckedText({ section: 'bank statement', why: 'failed' }), 'Couldn’t check monthly net: the bank statement didn’t load.')
+    assert.equal(
+      uncheckedText({ section: 'credit report', why: 'failed' }),
+      'Couldn’t check risk band and thin file: the credit report didn’t load.',
+    )
+    assert.equal(
+      uncheckedText({ section: 'category scores', why: 'empty' }),
+      'Couldn’t check categories: the category scores came back without the data needed.',
+    )
   })
 })

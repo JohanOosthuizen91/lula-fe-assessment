@@ -508,7 +508,7 @@ code {
 
 .money-row {
   display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
+  grid-template-columns: 130px minmax(0, 1fr);
   gap: var(--space-1) var(--space-3);
   align-items: start;
 }

@@ -9,13 +9,6 @@ export const PLACEHOLDER = '—'
 
 // signDisplay 'negative': a value that rounds to zero (-0, -0.001) shows as R 0,00, never -R 0,00.
 const money = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'ZAR', signDisplay: 'negative' })
-const compactMoney = new Intl.NumberFormat(LOCALE, {
-  style: 'currency',
-  currency: 'ZAR',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-  signDisplay: 'negative',
-})
 // Credit scores have no fixed scale; show the number as given, without inventing decimals.
 const creditScore = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 2 })
 // Category scores always show one decimal so a column lines up (32,0 next to 28,5); a second decimal is kept if sent.
@@ -37,11 +30,6 @@ function orPlaceholder(value: number | null, format: (value: number) => string):
 /** R 206 666,67 */
 export function formatMoney(value: number | null): string {
   return orPlaceholder(value, (v) => money.format(v))
-}
-
-/** R 206,7K */
-export function formatMoneyCompact(value: number | null): string {
-  return orPlaceholder(value, (v) => compactMoney.format(v))
 }
 
 /** 612 */

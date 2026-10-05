@@ -99,3 +99,11 @@ Not flagged, on purpose:
 - **The Medium band on its own.** It would flag two of the four completed assessments and make the list noisy.
 
 With the current data, Bright Construction is flagged for four reasons (High band, thin file, net 7,0% of credits, three categories below 40), Echo Tech is flagged as pending, and Acme, Cape Foods and Delta are clear.
+
+## Known issues
+
+- **Duplicate records read differently in the list and the detail.** If two credit reports or bank statements come back for one assessment, the list flags "2 credit reports found", while the detail section shows an error and the attention box says that section "didn't load". Neither picks a record or gives an all-clear, but the detail should name the conflict.
+- **The browser Back button doesn't restore focus.** On narrow screens, "Back to list" returns focus to the business you were viewing, but closing the detail with the browser's own Back button leaves focus on the page.
+- **A list row with incomplete data looks clear.** The detail says "Not fully checked" when a completed assessment comes back without the data a rule needs, but the list row shows no chip for it.
+- **`npm audit` reports 2 issues (1 moderate, 1 high)** in esbuild, through Vite 4. They affect the dev server only, and the fix is a major Vite upgrade, which was out of scope.
+- Smaller clean-ups: some CSS class names (`bar`, `figure`, `warning`) aren't prefixed by component, and two places join lists by hand where `Intl.ListFormat` would do.

@@ -1,6 +1,6 @@
 import { afterEach, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ApiError, getJson, listOf, parseAssessment, parseCreditReport } from './client.ts'
+import { ApiError, getJson, listOf, parseAssessment, parseBankStatement, parseCreditReport } from './client.ts'
 
 const realFetch = globalThis.fetch
 afterEach(() => {
@@ -56,12 +56,11 @@ test('an impossible date is rejected rather than rolled forward to another day',
   assert.equal(parseAssessment({ id: 101, businessId: 1, createdDate: '2024-02-29', status: 'Complete' }).createdDate, '2024-02-29')
 })
 
-test('the dev proxy’s empty 500 (API down) is reported as unreachable, with a plain-text hint', async () => {
+test('the dev proxy’s empty 500 (API down) is reported as unreachable', async () => {
   globalThis.fetch = async () => new Response('', { status: 500 })
   await assert.rejects(getJson('/businesses', (raw) => raw), (error: unknown) => {
     assert.ok(error instanceof ApiError)
     assert.equal(error.kind, 'unreachable')
-    assert.equal(error.hint, 'Is the API running? Start it with npm run api')
     return true
   })
 })
@@ -74,4 +73,17 @@ test('a connection that drops while the body is read is reported as unreachable,
   })
   globalThis.fetch = async () => new Response(failingBody, { status: 200 })
   await assert.rejects(getJson('/businesses', (raw) => raw), isApiError('unreachable'))
+})
+
+test('a negative period total is rejected, but more money out than in (a negative net) is valid', () => {
+  assert.throws(
+    () => parseBankStatement({ id: 1, assessmentId: 1, totalCredits: -300, totalDebits: 150, monthsAnalysed: 3 }),
+    isApiError('bad-shape'),
+  )
+  assert.throws(
+    () => parseBankStatement({ id: 1, assessmentId: 1, totalCredits: 300, totalDebits: -150, monthsAnalysed: 3 }),
+    isApiError('bad-shape'),
+  )
+  const outweighs = parseBankStatement({ id: 1, assessmentId: 1, totalCredits: 300, totalDebits: 450, monthsAnalysed: 3 })
+  assert.equal(outweighs.totalDebits, 450)
 })

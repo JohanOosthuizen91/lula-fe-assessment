@@ -14,7 +14,7 @@ A dashboard for a credit analyst reviewing business credit assessments, built in
 - **Every state handled**: loading skeletons; a pending assessment says "Awaiting assessment" rather than showing zeros; an unknown business or a malformed link says so; if the API is down the screen says how to start it, and if a refresh fails, data already on screen stays, marked with the time it was loaded.
 - **Layout**: list and detail side by side from 1200px, stacked below that and on phones, where selecting a business moves focus to the detail and "Back to list" returns it.
 
-Stack: React 18, TypeScript (strict), TanStack Query, plain CSS on Lula's `brand.css` tokens. No UI kit or chart library. 90 tests run with Node's built-in test runner.
+Stack: React 18, TypeScript (strict), TanStack Query, plain CSS on Lula's `brand.css` tokens. No UI kit or chart library. 91 tests run with Node's built-in test runner.
 
 ## Decisions and assumptions
 
@@ -109,7 +109,7 @@ To see the dead-API state, stop `npm run api` and reload; start it again and pre
 - Component tests for the attention box and the detail states, and an automated accessibility check.
 - Sorting and filtering for a longer list, and showing assessment history rather than only the current one.
 
-## The original brief
+## The original brief: Frontend Assessment
 
 ### Context
 

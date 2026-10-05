@@ -62,6 +62,23 @@ export function buildBusinessRows(collections: Collections): BusinessRow[] {
   })
 }
 
+/** Rows needing attention first, then by name. Doesn't change the input. */
+export function sortForReview(rows: readonly BusinessRow[]): BusinessRow[] {
+  const rank = (row: BusinessRow) => (row.reasons.length > 0 ? 0 : 1)
+  return [...rows].sort((a, b) => rank(a) - rank(b) || a.business.name.localeCompare(b.business.name, 'en-ZA'))
+}
+
+export type Summary = { businesses: number; needAttention: number; pending: number; highRisk: number }
+
+export function summarise(rows: readonly BusinessRow[]): Summary {
+  return {
+    businesses: rows.length,
+    needAttention: rows.filter((row) => row.reasons.length > 0).length,
+    pending: rows.filter((row) => row.assessment?.status === 'Pending').length,
+    highRisk: rows.filter((row) => row.creditReport?.riskBand === 'High').length,
+  }
+}
+
 /**
  * For a detail section: the one record expected (A7), or null if there's none. More than one is an error the
  * section shows, rather than picking one.

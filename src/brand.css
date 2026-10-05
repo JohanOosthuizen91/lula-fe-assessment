@@ -24,3 +24,32 @@ body {
   background: var(--color-surface);
   color: var(--color-text);
 }
+
+/* Added for the dashboard. The tokens above are Lula's and are unchanged. */
+:root {
+  /* Risk bands and statuses: text on its soft background meets WCAG AA (5.6:1 or better). */
+  --risk-low: #1d6b3a;
+  --risk-low-soft: #e2f2e7;
+  --risk-medium: #7a4a00;
+  --risk-medium-soft: #fcefd6;
+  --risk-high: #a1221c;
+  --risk-high-soft: #fbe3e1;
+  --status-pending: #4a3d8f;
+  --status-pending-soft: #ebe8f7;
+  /* Unrecognised values: deliberately no risk colour. */
+  --neutral: #3c4856;
+  --neutral-soft: #e9edf1;
+  /* Attention marker; 7.6:1 on white. */
+  --attention: #a1221c;
+  /* Small secondary text. --color-text-muted is about 3.9:1 on white, below AA for small text. */
+  --color-text-secondary: #5c6670;
+  --focus-ring: #1a73c7;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius: 8px;
+}

@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { ApiError, listOf, parseAssessment, parseBankStatement, parseBusiness, parseCreditReport, parseScoreItem } from '../api/client.ts'
-import { buildBusinessRows, expectOne } from './rows.ts'
+import { buildBusinessRows, expectOne, sortForReview, summarise } from './rows.ts'
 import type { Collections } from './rows.ts'
 
 // The real mock data, parsed the same way the app parses the API.
@@ -88,5 +88,20 @@ describe('expectOne', () => {
   })
   it('throws rather than picking one when there are several', () => {
     assert.throws(() => expectOne([1, 2], 'bank statements'), (e: unknown) => e instanceof ApiError && e.kind === 'bad-shape')
+  })
+})
+
+describe('sortForReview and summarise with the real data', () => {
+  const rows = buildBusinessRows(collections)
+
+  it('puts businesses needing attention first, then sorts by name', () => {
+    assert.deepEqual(
+      sortForReview(rows).map((r) => r.business.name),
+      ['Bright Construction', 'Echo Tech Solutions', 'Acme Traders', 'Cape Foods Distributors', 'Delta Logistics'],
+    )
+  })
+
+  it('counts 5 businesses, 2 needing attention, 1 pending and 1 high risk', () => {
+    assert.deepEqual(summarise(rows), { businesses: 5, needAttention: 2, pending: 1, highRisk: 1 })
   })
 })

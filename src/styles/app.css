@@ -659,3 +659,20 @@ code {
   background: var(--risk-medium-soft);
   color: var(--risk-medium);
 }
+
+/* Some rules couldn't be checked: amber, never the green all-clear. */
+.attention--unchecked {
+  border-color: var(--risk-medium-soft);
+  border-left: 4px solid var(--risk-medium);
+  background: var(--risk-medium-soft);
+  color: var(--risk-medium);
+}
+
+.attention--unchecked h3 {
+  color: var(--risk-medium);
+}
+
+.attention-unchecked {
+  margin-top: var(--space-2);
+  color: var(--risk-medium);
+}

@@ -4,7 +4,9 @@ import type { Assessment, BankStatement, CreditReport, ScoreItem } from '../api/
 import { useBankStatement, useBusiness, useCreditReport, useCurrentAssessment, useScoreItems } from '../api/queries.ts'
 import { ApiError } from '../api/client.ts'
 import { CATEGORY_THRESHOLD, attentionReasons, monthlyFinancials } from '../lib/assessment.ts'
-import type { AttentionReason, MonthlyFinancials } from '../lib/assessment.ts'
+import type { MonthlyFinancials } from '../lib/assessment.ts'
+import { checkAttention, uncheckedText } from '../lib/attention.ts'
+import type { AttentionCheck, AttentionSection, SectionLoad } from '../lib/attention.ts'
 import {
   formatCategoryScore,
   formatCreditScore,
@@ -68,7 +70,7 @@ export function AssessmentDetail({ businessId }: { businessId: number }) {
           <SectionSkeleton label="Loading assessment…" lines={4} />
         )
       ) : assessmentQuery.data === null ? (
-        <AttentionBox state={{ kind: 'checked', reasons: attentionReasons(NO_ASSESSMENT) }} />
+        <AttentionBox check={{ kind: 'flagged', reasons: attentionReasons(NO_ASSESSMENT), unchecked: [] }} />
       ) : (
         <AssessmentSections
           assessment={assessmentQuery.data}
@@ -125,7 +127,14 @@ function AssessmentSections({ assessment, reportQuery, statementQuery, itemsQuer
   const pending = assessment.status === 'Pending'
   return (
     <>
-      <AttentionBox state={attentionState(assessment, reportQuery, statementQuery, itemsQuery)} />
+      <AttentionBox
+        check={checkAttention({
+          assessment,
+          creditReport: toLoad(reportQuery),
+          bankStatement: toLoad(statementQuery),
+          scoreItems: toLoad(itemsQuery),
+        })}
+      />
       <Section title="Credit score" query={reportQuery} what="credit report">
         {(report) => <ScoreSection report={report} pending={pending} />}
       </Section>
@@ -165,66 +174,59 @@ function Section<T>({
   )
 }
 
-// Attention: every rule is checked only once all three sections have loaded. If one failed, say so.
+// Attention: an all-clear only when every section loaded (see src/lib/attention.ts).
 
-type AttentionState =
-  | { kind: 'loading' }
-  | { kind: 'checked'; reasons: AttentionReason[] }
-  | { kind: 'partial'; reasons: AttentionReason[]; failed: string[] }
-
-function attentionState(
-  assessment: Assessment,
-  reportQuery: UseQueryResult<CreditReport | null>,
-  statementQuery: UseQueryResult<BankStatement | null>,
-  itemsQuery: UseQueryResult<ScoreItem[]>,
-): AttentionState {
-  // A section counts as failed only if it never loaded; earlier data kept after a failed refresh is still checked.
-  const neverLoaded = (q: UseQueryResult<unknown>) => q.isError && q.data === undefined
-  const failed = [
-    neverLoaded(reportQuery) ? 'credit report' : null,
-    neverLoaded(statementQuery) ? 'bank statement' : null,
-    neverLoaded(itemsQuery) ? 'category scores' : null,
-  ].filter((name) => name !== null)
-  const settled = [reportQuery, statementQuery, itemsQuery].every((q) => q.data !== undefined || q.isError)
-  if (!settled) return { kind: 'loading' }
-
-  const reasons = attentionReasons({
-    assessment,
-    creditReport: reportQuery.data ?? null,
-    bankStatement: statementQuery.data ?? null,
-    scoreItems: itemsQuery.data ?? [],
-  })
-  return failed.length > 0 ? { kind: 'partial', reasons, failed } : { kind: 'checked', reasons }
+/** A section that has data is checked, including earlier data kept after a failed refresh; one that never loaded is not. */
+function toLoad<T>(query: UseQueryResult<T>): SectionLoad<T> {
+  if (query.data !== undefined) return { status: 'loaded', data: query.data }
+  return query.isError ? { status: 'failed' } : { status: 'loading' }
 }
 
-function AttentionBox({ state }: { state: AttentionState }) {
-  if (state.kind === 'loading') {
-    return (
-      <div className="attention attention--checking" role="status">
-        Checking the attention rules…
-      </div>
-    )
+function AttentionBox({ check }: { check: AttentionCheck }) {
+  switch (check.kind) {
+    case 'checking':
+      return (
+        <div className="attention attention--checking" role="status">
+          Checking the attention rules…
+        </div>
+      )
+    case 'clear':
+      return (
+        <div className="attention attention--clear">
+          <h3>No attention flags</h3>
+          <p>Every rule was checked.</p>
+        </div>
+      )
+    case 'not-fully-checked':
+      return (
+        <div className="attention attention--unchecked">
+          <h3>Not fully checked</h3>
+          <UncheckedList sections={check.unchecked} />
+          <p>The data that did load raised no flags.</p>
+        </div>
+      )
+    case 'flagged':
+      return (
+        <div className="attention attention--flagged">
+          <h3>Needs attention</h3>
+          <ul>
+            {check.reasons.map((reason) => (
+              <li key={reasonKey(reason)}>{reasonDetail(reason)}</li>
+            ))}
+          </ul>
+          {check.unchecked.length > 0 ? <UncheckedList sections={check.unchecked} /> : null}
+        </div>
+      )
   }
-  const { reasons } = state
+}
+
+function UncheckedList({ sections }: { sections: AttentionSection[] }) {
   return (
-    <div className={reasons.length > 0 ? 'attention attention--flagged' : 'attention attention--clear'}>
-      <h3>{reasons.length > 0 ? 'Needs attention' : 'No attention flags'}</h3>
-      {state.kind === 'partial' ? (
-        <p className="attention-partial">
-          Not every rule could be checked: the {state.failed.join(' and ')} didn’t load.
-          {reasons.length > 0 ? ' Flags from the data that did load:' : ''}
-        </p>
-      ) : reasons.length === 0 ? (
-        <p>Every rule was checked.</p>
-      ) : null}
-      {reasons.length > 0 ? (
-        <ul>
-          {reasons.map((reason) => (
-            <li key={reasonKey(reason)}>{reasonDetail(reason)}</li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
+    <ul className="attention-unchecked">
+      {sections.map((section) => (
+        <li key={section}>{uncheckedText(section)}</li>
+      ))}
+    </ul>
   )
 }
 

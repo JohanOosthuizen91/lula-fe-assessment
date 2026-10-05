@@ -57,6 +57,9 @@ export function monthlyFinancials(statement: BankStatement | null): MonthlyFinan
 export type WeakCategory = { category: string; score: number }
 
 export type AttentionReason =
+  // Raised when rows are joined (src/lib/rows.ts), not by attentionReasons: more than one record came back
+  // where one was expected (A7), so none is shown.
+  | { code: 'conflicting-records'; records: 'credit reports' | 'bank statements'; count: number }
   | { code: 'no-assessment' }
   | { code: 'pending' }
   | { code: 'unrecognised-status'; raw: string }

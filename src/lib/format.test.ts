@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  FUTURE_DATE_NOTE,
   PLACEHOLDER,
   formatCategoryScore,
   formatCreditScore,
@@ -22,6 +23,21 @@ describe('formatMoney', () => {
   it('shows a real zero as R 0,00 and a negative with a minus sign', () => {
     assert.equal(formatMoney(0), 'R\u00a00,00')
     assert.equal(formatMoney(-3000), '-R\u00a03\u00a0000,00')
+  })
+})
+
+describe('values that round to zero', () => {
+  // Built from its code point, so no editor or tool can silently swap it for a plain space.
+  const NBSP = String.fromCharCode(0xa0)
+
+  it('show no minus sign, while real negatives keep theirs', () => {
+    assert.equal(formatMoney(-0), `R${NBSP}0,00`)
+    assert.equal(formatMoney(-0.001), `R${NBSP}0,00`)
+    assert.equal(formatMoneyCompact(-0.001), `R${NBSP}0`)
+    assert.equal(formatPercent(-0.0001), '0,0%')
+    assert.equal(formatPercent(-0), '0,0%')
+    assert.equal(formatMoney(-3000), `-R${NBSP}3${NBSP}000,00`)
+    assert.equal(formatPercent(-0.07), '-7,0%')
   })
 })
 
@@ -85,6 +101,13 @@ describe('formatMonthsAgo', () => {
     assert.equal(formatMonthsAgo('2026-09-05', today), 'last month')
     assert.equal(formatMonthsAgo('2026-09-20', today), 'this month')
     assert.equal(formatMonthsAgo('2026-10-05', today), 'this month')
+  })
+  it('marks a date after today as a likely data error, and the date itself still shows as given', () => {
+    assert.equal(formatMonthsAgo('2026-10-20', today), FUTURE_DATE_NOTE)
+    assert.equal(formatMonthsAgo('2026-10-06', today), FUTURE_DATE_NOTE)
+    assert.equal(formatMonthsAgo('2027-01-01', today), FUTURE_DATE_NOTE)
+    assert.equal(FUTURE_DATE_NOTE, 'future date, check data')
+    assert.equal(formatDate('2026-10-20'), '20 Oct 2026')
   })
 })
 

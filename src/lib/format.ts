@@ -7,18 +7,25 @@ const LOCALE = 'en-ZA'
 /** Shown wherever a value is missing. */
 export const PLACEHOLDER = '—'
 
-const money = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'ZAR' })
+// signDisplay 'negative': a value that rounds to zero (-0, -0.001) shows as R 0,00, never -R 0,00.
+const money = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'ZAR', signDisplay: 'negative' })
 const compactMoney = new Intl.NumberFormat(LOCALE, {
   style: 'currency',
   currency: 'ZAR',
   notation: 'compact',
   maximumFractionDigits: 1,
+  signDisplay: 'negative',
 })
 // Credit scores have no fixed scale; show the number as given, without inventing decimals.
 const creditScore = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 2 })
 // Category scores always show one decimal so a column lines up (32,0 next to 28,5); a second decimal is kept if sent.
 const categoryScore = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 2 })
-const percent = new Intl.NumberFormat(LOCALE, { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const percent = new Intl.NumberFormat(LOCALE, {
+  style: 'percent',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+  signDisplay: 'negative',
+})
 // Formatted in UTC from the date's own parts, so the viewer's time zone can't move the day.
 const calendarDate = new Intl.DateTimeFormat(LOCALE, { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
 const relative = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' })
@@ -70,12 +77,23 @@ export function formatDate(isoDate: string | null): string {
   return calendarDate.format(Date.UTC(parts.year, parts.month - 1, parts.day))
 }
 
+/** Shown beside the real date when a date is after today; a likely data error, so it isn't dressed up as "next month". */
+export const FUTURE_DATE_NOTE = 'future date, check data'
+
 /** Whole calendar months from the date to today: "22 months ago", "last month", "this month". */
 export function formatMonthsAgo(isoDate: string | null, now: Date = new Date()): string {
   const parts = isoDate === null ? null : dateParts(isoDate)
   if (parts === null) return PLACEHOLDER
   // Today is the analyst's own calendar date.
-  let months = (now.getFullYear() - parts.year) * 12 + (now.getMonth() + 1 - parts.month)
-  if (now.getDate() < parts.day) months -= 1
+  const today = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
+  const isFuture =
+    parts.year !== today.year
+      ? parts.year > today.year
+      : parts.month !== today.month
+        ? parts.month > today.month
+        : parts.day > today.day
+  if (isFuture) return FUTURE_DATE_NOTE
+  let months = (today.year - parts.year) * 12 + (today.month - parts.month)
+  if (today.day < parts.day) months -= 1
   return relative.format(-months, 'month')
 }

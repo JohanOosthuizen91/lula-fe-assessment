@@ -80,6 +80,8 @@ The brief is deliberately open. Lula answered a few questions on 5 Oct 2026 (And
 
 Why A3 matters: Cape Foods' statements cover 6 months and the others cover 3. On raw totals Cape looks about twice Delta's size; per month they're almost level.
 
+Loading: the list fetches all five collections in parallel and joins them in the browser, which is fine for a handful of businesses; in production I'd ask for a summary endpoint. The detail view uses the documented filtered endpoints, one request per section, so one failing section doesn't blank the rest. If more than one credit report or bank statement comes back for an assessment (A7), none is shown and the business is flagged, rather than picking one.
+
 ### Which businesses need attention
 
 The thresholds live in one place, `src/lib/assessment.ts`, and every flag on screen shows its reason.

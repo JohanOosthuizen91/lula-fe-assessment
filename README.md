@@ -89,6 +89,8 @@ The thresholds live in one place, `src/lib/assessment.ts`, and every flag on scr
 - **Thin file.** Less history makes the score less reliable, so a person should look before trusting it.
 - **Net monthly movement under 10% of monthly credits.** Little headroom left after outgoings. A placeholder for analysts to tune.
 - **Any category below 40 (out of 100).** One weak area can hide behind a reasonable overall score. Also a placeholder.
+- **A risk band or status the app doesn't recognise.** It's shown as the raw text in a neutral style, never mapped to a known band or colour, and flagged so a person checks it. One unexpected value doesn't stop the rest of the list from loading.
+- **No assessment at all.** There's nothing to base a decision on yet.
 
 Not flagged, on purpose:
 - **Assessment age.** Every assessment in the data is from late 2024, about 22–23 months old, so an age rule would flag everything and tell the analyst nothing.

@@ -1,6 +1,15 @@
-import { test } from 'node:test'
+import { afterEach, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ApiError, listOf, parseAssessment, parseCreditReport } from './client.ts'
+import { ApiError, getJson, listOf, parseAssessment, parseCreditReport } from './client.ts'
+
+const realFetch = globalThis.fetch
+afterEach(() => {
+  globalThis.fetch = realFetch
+})
+
+function isApiError(kind: string) {
+  return (error: unknown) => error instanceof ApiError && error.kind === kind
+}
 
 const parseCreditReports = listOf(parseCreditReport, 'creditReports')
 
@@ -34,4 +43,35 @@ test('structural errors still throw: a band that is not text, or a missing id', 
     () => parseCreditReports([{ assessmentId: 101, score: 612, riskBand: 'Low', isThinFile: false }]),
     (error: unknown) => error instanceof ApiError && error.kind === 'bad-shape',
   )
+})
+
+test('an impossible date is rejected rather than rolled forward to another day', () => {
+  for (const createdDate of ['2024-02-30', '2023-02-29', '2024-04-31', '2024-13-01']) {
+    assert.throws(
+      () => parseAssessment({ id: 101, businessId: 1, createdDate, status: 'Complete' }),
+      isApiError('bad-shape'),
+      createdDate,
+    )
+  }
+  assert.equal(parseAssessment({ id: 101, businessId: 1, createdDate: '2024-02-29', status: 'Complete' }).createdDate, '2024-02-29')
+})
+
+test('the dev proxy’s empty 500 (API down) is reported as unreachable, with a plain-text hint', async () => {
+  globalThis.fetch = async () => new Response('', { status: 500 })
+  await assert.rejects(getJson('/businesses', (raw) => raw), (error: unknown) => {
+    assert.ok(error instanceof ApiError)
+    assert.equal(error.kind, 'unreachable')
+    assert.equal(error.hint, 'Is the API running? Start it with npm run api')
+    return true
+  })
+})
+
+test('a connection that drops while the body is read is reported as unreachable, not a raw TypeError', async () => {
+  const failingBody = new ReadableStream({
+    start(controller) {
+      controller.error(new TypeError('terminated'))
+    },
+  })
+  globalThis.fetch = async () => new Response(failingBody, { status: 200 })
+  await assert.rejects(getJson('/businesses', (raw) => raw), isApiError('unreachable'))
 })

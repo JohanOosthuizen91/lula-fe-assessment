@@ -42,14 +42,15 @@ function unreachable(status: number | null): ApiError {
 
 export async function getJson<T>(path: string, parse: (raw: unknown) => T, signal?: AbortSignal): Promise<T> {
   let response: Response
+  let body: string
+  // Reading the body can fail too (the connection drops mid-response), so both steps share one guard.
   try {
     response = await fetch(`${API_BASE}${path}`, { signal })
+    body = await response.text()
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw unreachable(null)
   }
-
-  const body = await response.text()
 
   // When json-server is down, the Vite dev proxy answers 500 with an empty body.
   if (response.status === 500 && body === '') throw unreachable(500)
@@ -114,7 +115,11 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 function isoDate(fields: Fields, key: string, where: string): string {
   const value = text(fields, key, where)
-  if (!ISO_DATE.test(value) || Number.isNaN(Date.parse(value))) throw badShape(`${where}.${key}`, 'a YYYY-MM-DD date')
+  // Date.parse rolls impossible days forward (2024-02-30 becomes 1 March), so the date must survive a round trip.
+  const parsed = Date.parse(value)
+  if (!ISO_DATE.test(value) || Number.isNaN(parsed) || new Date(parsed).toISOString().slice(0, 10) !== value) {
+    throw badShape(`${where}.${key}`, 'a real YYYY-MM-DD date')
+  }
   return value
 }
 

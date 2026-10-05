@@ -6,6 +6,8 @@ import type { Selection } from './lib/selection.ts'
 import { AssessmentDetail } from './components/AssessmentDetail.tsx'
 import { BusinessList } from './components/BusinessList.tsx'
 import { ErrorMessage } from './components/ErrorMessage.tsx'
+import { ListSkeleton } from './components/Skeletons.tsx'
+import { StaleNotice } from './components/StaleNotice.tsx'
 import { SummaryStrip } from './components/SummaryStrip.tsx'
 
 /**
@@ -13,6 +15,17 @@ import { SummaryStrip } from './components/SummaryStrip.tsx'
  * styles/app.css, and "stacked" is its opposite, so the two can never disagree (even at a zoomed 1199.5px).
  */
 export const SIDE_BY_SIDE_QUERY = '(min-width: 1200px)'
+
+/**
+ * Moves focus to the stacked detail and scrolls its top into view. Focusing alone left the heading off screen,
+ * depending on where the list was scrolled, so the scroll is explicit (smooth unless reduced motion is asked for).
+ */
+function revealDetail(panel: HTMLElement | null) {
+  if (panel === null) return
+  panel.focus({ preventScroll: true })
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  panel.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
+}
 
 type FocusRequest = { target: 'detail' } | { target: 'row'; businessId: number }
 
@@ -32,7 +45,7 @@ export function App() {
     if (request === null) return
     focusRequest.current = null
     if (request.target === 'detail') {
-      detailRef.current?.focus()
+      revealDetail(detailRef.current)
     } else {
       listRef.current?.querySelector<HTMLButtonElement>(`button[data-business-id="${request.businessId}"]`)?.focus()
     }
@@ -45,7 +58,7 @@ export function App() {
       return
     }
     if (businessId === selectedId) {
-      detailRef.current?.focus()
+      revealDetail(detailRef.current)
       return
     }
     focusRequest.current = { target: 'detail' }
@@ -63,18 +76,22 @@ export function App() {
         <h1>Credit assessments</h1>
       </header>
       <main className="page">
-        {rowsQuery.isPending ? (
-          <p className="page-status" role="status">
-            Loading businesses…
-          </p>
-        ) : rowsQuery.isError ? (
-          <ErrorMessage
-            title="The businesses couldn’t be loaded."
-            error={rowsQuery.error}
-            onRetry={() => void rowsQuery.refetch()}
-          />
+        {/* Loaded data stays on screen if a later refresh fails; the notice says so and how old it is. */}
+        {rowsQuery.data === undefined ? (
+          rowsQuery.isError ? (
+            <ErrorMessage
+              title="The businesses couldn’t be loaded."
+              error={rowsQuery.error}
+              onRetry={() => void rowsQuery.refetch()}
+            />
+          ) : (
+            <ListSkeleton />
+          )
         ) : (
           <>
+            {rowsQuery.isError ? (
+              <StaleNotice what="the list" loadedAt={rowsQuery.dataUpdatedAt} onRetry={() => void rowsQuery.refetch()} />
+            ) : null}
             <SummaryStrip summary={summarise(rowsQuery.data)} />
             <div className={showPanel ? 'layout layout--with-panel' : 'layout'}>
               <section ref={listRef} className="panel list-panel" aria-label="Businesses">

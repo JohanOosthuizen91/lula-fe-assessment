@@ -348,11 +348,23 @@ code {
 
 /* Detail panel */
 
+/* Stacked (the exact negation of SIDE_BY_SIDE_QUERY): the panel is at least one screen tall, so it can always be
+   scrolled to the top when selected, even while it is still loading and short. */
+@media not all and (min-width: 1200px) {
+  .detail-panel {
+    min-height: calc(100vh - 2 * var(--space-3));
+  }
+}
+
 .detail-panel {
+  /* A small gap above the panel when it is scrolled to the top of the screen. */
+  scroll-margin-top: var(--space-3);
   padding: var(--space-4);
   display: grid;
   gap: var(--space-4);
   justify-items: start;
+  /* Keep content at the top when the panel is taller than it (the stacked minimum height). */
+  align-content: start;
 }
 
 .detail-header h2 {
@@ -565,4 +577,85 @@ code {
 /* Room for the "40" label that hangs below each track, so the last one clears the caption. */
 .category {
   padding-bottom: var(--space-4);
+}
+
+/* Loading placeholders */
+
+.skeleton {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--neutral-soft) 25%, var(--color-surface) 50%, var(--neutral-soft) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton--short {
+  width: 80px;
+}
+
+.skeleton--name {
+  width: 180px;
+  height: 14px;
+}
+
+.skeleton-summary {
+  display: flex;
+  gap: var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.skeleton-panel {
+  padding: var(--space-2) 0;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-row:last-child {
+  border-bottom: 0;
+}
+
+.skeleton-section {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.skeleton-section .skeleton:last-child {
+  width: 60%;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* A refresh failed but earlier data is still shown. */
+
+.stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--risk-medium-soft);
+  color: var(--risk-medium);
 }

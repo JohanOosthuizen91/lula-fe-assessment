@@ -97,3 +97,10 @@ export function formatMonthsAgo(isoDate: string | null, now: Date = new Date()):
   if (today.day < parts.day) months -= 1
   return relative.format(-months, 'month')
 }
+
+const clockTime = new Intl.DateTimeFormat(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: false })
+
+/** 20:53, in the analyst's own time zone: when data on screen was loaded. */
+export function formatTime(timestamp: number): string {
+  return clockTime.format(timestamp)
+}

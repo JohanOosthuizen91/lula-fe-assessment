@@ -16,6 +16,8 @@ import {
 import { reasonDetail, reasonKey } from '../lib/reasons.ts'
 import { ErrorMessage } from './ErrorMessage.tsx'
 import { RiskBandPill, StatusPill } from './Pills.tsx'
+import { SectionSkeleton } from './Skeletons.tsx'
+import { StaleNotice } from './StaleNotice.tsx'
 
 const AWAITING = 'Awaiting assessment'
 
@@ -28,7 +30,8 @@ export function AssessmentDetail({ businessId }: { businessId: number }) {
   const statementQuery = useBankStatement(assessmentId)
   const itemsQuery = useScoreItems(assessmentId)
 
-  if (businessQuery.isError) {
+  // Earlier data stays on screen if a refresh fails (with a notice); an error only replaces a section that never loaded.
+  if (businessQuery.data === undefined && businessQuery.isError) {
     if (businessQuery.error instanceof ApiError && businessQuery.error.kind === 'not-found') {
       return <p className="detail-message">There’s no business with that id.</p>
     }
@@ -40,17 +43,12 @@ export function AssessmentDetail({ businessId }: { businessId: number }) {
       />
     )
   }
-  if (businessQuery.isPending) {
-    return (
-      <p className="detail-message" role="status">
-        Loading business…
-      </p>
-    )
-  }
+  if (businessQuery.data === undefined) return <SectionSkeleton label="Loading business…" lines={3} />
 
   const business = businessQuery.data
   return (
     <div className="detail">
+      <DetailStaleNotice queries={[businessQuery, assessmentQuery, reportQuery, statementQuery, itemsQuery]} />
       <header className="detail-header">
         <h2>{business.name}</h2>
         <p className="detail-sub">
@@ -59,16 +57,16 @@ export function AssessmentDetail({ businessId }: { businessId: number }) {
         <AssessedLine query={assessmentQuery} />
       </header>
 
-      {assessmentQuery.isError ? (
-        <ErrorMessage
-          title="The assessment couldn’t be loaded."
-          error={assessmentQuery.error}
-          onRetry={() => void assessmentQuery.refetch()}
-        />
-      ) : assessmentQuery.isPending ? (
-        <p className="detail-message" role="status">
-          Loading assessment…
-        </p>
+      {assessmentQuery.data === undefined ? (
+        assessmentQuery.isError ? (
+          <ErrorMessage
+            title="The assessment couldn’t be loaded."
+            error={assessmentQuery.error}
+            onRetry={() => void assessmentQuery.refetch()}
+          />
+        ) : (
+          <SectionSkeleton label="Loading assessment…" lines={4} />
+        )
       ) : assessmentQuery.data === null ? (
         <AttentionBox state={{ kind: 'checked', reasons: attentionReasons(NO_ASSESSMENT) }} />
       ) : (
@@ -83,11 +81,28 @@ export function AssessmentDetail({ businessId }: { businessId: number }) {
   )
 }
 
+/** One notice for the whole detail when refreshes fail but earlier data is still shown, dated by the oldest of it. */
+function DetailStaleNotice({ queries }: { queries: UseQueryResult<unknown>[] }) {
+  const stale = queries.filter((q) => q.isError && q.data !== undefined)
+  if (stale.length === 0) return null
+  const oldest = Math.min(...stale.map((q) => q.dataUpdatedAt))
+  return (
+    <StaleNotice
+      what="this assessment"
+      loadedAt={oldest}
+      onRetry={() => {
+        for (const q of stale) void q.refetch()
+      }}
+    />
+  )
+}
+
 const NO_ASSESSMENT = { assessment: null, creditReport: null, bankStatement: null, scoreItems: [] }
 
 function AssessedLine({ query }: { query: UseQueryResult<Assessment | null> }) {
-  if (!query.isSuccess) return null
+  // Shown whenever there is data, including earlier data kept after a failed refresh.
   const assessment = query.data
+  if (assessment === undefined) return null
   if (assessment === null) return <p className="detail-assessed">Not assessed yet</p>
   return (
     <p className="detail-assessed">
@@ -139,14 +154,12 @@ function Section<T>({
   return (
     <section className="detail-section" aria-label={title}>
       <h3>{title}</h3>
-      {query.isError ? (
-        <ErrorMessage title={`The ${what} couldn’t be loaded.`} error={query.error} onRetry={() => void query.refetch()} />
-      ) : query.isPending ? (
-        <p className="detail-message" role="status">
-          Loading…
-        </p>
-      ) : (
+      {query.data !== undefined ? (
         children(query.data)
+      ) : query.isError ? (
+        <ErrorMessage title={`The ${what} couldn’t be loaded.`} error={query.error} onRetry={() => void query.refetch()} />
+      ) : (
+        <SectionSkeleton label={`Loading the ${what}…`} />
       )}
     </section>
   )
@@ -165,12 +178,14 @@ function attentionState(
   statementQuery: UseQueryResult<BankStatement | null>,
   itemsQuery: UseQueryResult<ScoreItem[]>,
 ): AttentionState {
+  // A section counts as failed only if it never loaded; earlier data kept after a failed refresh is still checked.
+  const neverLoaded = (q: UseQueryResult<unknown>) => q.isError && q.data === undefined
   const failed = [
-    reportQuery.isError ? 'credit report' : null,
-    statementQuery.isError ? 'bank statement' : null,
-    itemsQuery.isError ? 'category scores' : null,
+    neverLoaded(reportQuery) ? 'credit report' : null,
+    neverLoaded(statementQuery) ? 'bank statement' : null,
+    neverLoaded(itemsQuery) ? 'category scores' : null,
   ].filter((name) => name !== null)
-  const settled = [reportQuery, statementQuery, itemsQuery].every((q) => q.isSuccess || q.isError)
+  const settled = [reportQuery, statementQuery, itemsQuery].every((q) => q.data !== undefined || q.isError)
   if (!settled) return { kind: 'loading' }
 
   const reasons = attentionReasons({

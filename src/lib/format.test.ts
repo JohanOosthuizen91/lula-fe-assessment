@@ -10,6 +10,7 @@ import {
   formatMoneyCompact,
   formatMonthsAgo,
   formatPercent,
+  formatTime,
 } from './format.ts'
 
 // No-break spaces are written as \u00a0 escapes on purpose, so the bytes are checked exactly.
@@ -75,7 +76,8 @@ describe('formatDate', () => {
     assert.equal(formatDate('2024-09-02'), '02 Sept 2024')
   })
   it('gives the same day in every time zone', () => {
-    const original = process.env.TZ
+    // Deleting TZ doesn't make Node go back to the system zone, so restore the zone by name afterwards.
+    const original = process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone
     try {
       for (const zone of ['UTC', 'Africa/Johannesburg', 'America/Los_Angeles', 'Pacific/Kiritimati']) {
         process.env.TZ = zone
@@ -83,8 +85,7 @@ describe('formatDate', () => {
         assert.equal(formatDate('2024-01-01'), '01 Jan 2024', zone)
       }
     } finally {
-      if (original === undefined) delete process.env.TZ
-      else process.env.TZ = original
+      process.env.TZ = original
     }
   })
 })
@@ -108,6 +109,13 @@ describe('formatMonthsAgo', () => {
     assert.equal(formatMonthsAgo('2027-01-01', today), FUTURE_DATE_NOTE)
     assert.equal(FUTURE_DATE_NOTE, 'future date, check data')
     assert.equal(formatDate('2026-10-20'), '20 Oct 2026')
+  })
+})
+
+describe('formatTime', () => {
+  it('gives a 24-hour local clock time', () => {
+    assert.equal(formatTime(new Date(2026, 9, 5, 9, 5).getTime()), '09:05')
+    assert.equal(formatTime(new Date(2026, 9, 5, 20, 53).getTime()), '20:53')
   })
 })
 

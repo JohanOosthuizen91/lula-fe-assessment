@@ -87,7 +87,7 @@ The thresholds live in one place, `src/lib/assessment.ts`, and every flag on scr
 - **Pending assessment.** It has to be finished before any credit decision. Pending assessments also get their own count in the summary.
 - **High risk band.** Lula's own band, and the clearest signal there is.
 - **Thin file.** Less history makes the score less reliable, so a person should look before trusting it.
-- **Net monthly movement under 10% of monthly credits.** Little headroom left after outgoings. A placeholder for analysts to tune.
+- **Net monthly movement under 10% of monthly credits, or no credits at all.** Little headroom left after outgoings. A placeholder for analysts to tune.
 - **Any category below 40 (out of 100).** One weak area can hide behind a reasonable overall score. Also a placeholder.
 - **A risk band or status the app doesn't recognise.** It's shown as the raw text in a neutral style, never mapped to a known band or colour, and flagged so a person checks it. One unexpected value doesn't stop the rest of the list from loading.
 - **No assessment at all.** There's nothing to base a decision on yet.

@@ -1,0 +1,51 @@
+{
+  "businesses": [
+    { "id": 1, "name": "Acme Traders", "registrationNumber": "2018/123456/07", "industry": "Retail" },
+    { "id": 2, "name": "Bright Construction", "registrationNumber": "2020/456789/07", "industry": "Construction" },
+    { "id": 3, "name": "Cape Foods Distributors", "registrationNumber": "2015/234567/07", "industry": "Food & Beverage" },
+    { "id": 4, "name": "Delta Logistics", "registrationNumber": "2019/345678/07", "industry": "Transport" },
+    { "id": 5, "name": "Echo Tech Solutions", "registrationNumber": "2022/567890/07", "industry": "Technology" }
+  ],
+  "assessments": [
+    { "id": 101, "businessId": 1, "createdDate": "2024-11-15", "status": "Complete" },
+    { "id": 102, "businessId": 2, "createdDate": "2024-11-18", "status": "Complete" },
+    { "id": 103, "businessId": 3, "createdDate": "2024-10-30", "status": "Complete" },
+    { "id": 104, "businessId": 4, "createdDate": "2024-11-20", "status": "Complete" },
+    { "id": 105, "businessId": 5, "createdDate": "2024-11-22", "status": "Pending" }
+  ],
+  "creditReports": [
+    { "id": 201, "assessmentId": 101, "score": 612, "riskBand": "Medium", "isThinFile": false },
+    { "id": 202, "assessmentId": 102, "score": 384, "riskBand": "High",   "isThinFile": true  },
+    { "id": 203, "assessmentId": 103, "score": 741, "riskBand": "Low",    "isThinFile": false },
+    { "id": 204, "assessmentId": 104, "score": 558, "riskBand": "Medium", "isThinFile": false },
+    { "id": 205, "assessmentId": 105, "score": null, "riskBand": null,    "isThinFile": null  }
+  ],
+  "bankStatements": [
+    { "id": 301, "assessmentId": 101, "totalCredits": 485000.00,  "totalDebits": 312000.00, "monthsAnalysed": 3 },
+    { "id": 302, "assessmentId": 102, "totalCredits": 128000.00,  "totalDebits": 119000.00, "monthsAnalysed": 3 },
+    { "id": 303, "assessmentId": 103, "totalCredits": 1240000.00, "totalDebits": 780000.00, "monthsAnalysed": 6 },
+    { "id": 304, "assessmentId": 104, "totalCredits": 630000.00,  "totalDebits": 480000.00, "monthsAnalysed": 3 },
+    { "id": 305, "assessmentId": 105, "totalCredits": null,       "totalDebits": null,      "monthsAnalysed": null }
+  ],
+  "scoreItems": [
+    { "id": 401, "assessmentId": 101, "category": "Payment History",    "score": 68.5 },
+    { "id": 402, "assessmentId": 101, "category": "Credit Utilisation", "score": 55.0 },
+    { "id": 403, "assessmentId": 101, "category": "Business Age",       "score": 72.0 },
+    { "id": 404, "assessmentId": 101, "category": "Cash Flow",          "score": 61.5 },
+
+    { "id": 405, "assessmentId": 102, "category": "Payment History",    "score": 32.0 },
+    { "id": 406, "assessmentId": 102, "category": "Credit Utilisation", "score": 28.5 },
+    { "id": 407, "assessmentId": 102, "category": "Business Age",       "score": 45.0 },
+    { "id": 408, "assessmentId": 102, "category": "Cash Flow",          "score": 22.0 },
+
+    { "id": 409, "assessmentId": 103, "category": "Payment History",    "score": 88.0 },
+    { "id": 410, "assessmentId": 103, "category": "Credit Utilisation", "score": 79.5 },
+    { "id": 411, "assessmentId": 103, "category": "Business Age",       "score": 91.0 },
+    { "id": 412, "assessmentId": 103, "category": "Cash Flow",          "score": 82.5 },
+
+    { "id": 413, "assessmentId": 104, "category": "Payment History",    "score": 61.0 },
+    { "id": 414, "assessmentId": 104, "category": "Credit Utilisation", "score": 58.5 },
+    { "id": 415, "assessmentId": 104, "category": "Business Age",       "score": 65.0 },
+    { "id": 416, "assessmentId": 104, "category": "Cash Flow",          "score": 55.0 }
+  ]
+}

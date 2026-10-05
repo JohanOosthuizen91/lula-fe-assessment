@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+/* Brand font is Proxima Nova. Montserrat is the closest available substitute. */
+
+:root {
+  --color-primary: #0F253B;
+  --color-primary-light: #1a3a54;
+  --color-surface: #f5f7f9;
+  --color-surface-white: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-muted: rgba(0, 0, 0, 0.5);
+  --color-border: rgba(0, 0, 0, 0.1);
+  --font-sans: 'Proxima Nova', 'Montserrat', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-text);
+}

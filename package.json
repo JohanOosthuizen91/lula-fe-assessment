@@ -1,0 +1,20 @@
+{
+  "name": "fe-assessment",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "api": "json-server data.json --port 3001"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "json-server": "^0.17.4",
+    "vite": "^4.4.0"
+  }
+}

@@ -16,13 +16,24 @@ import {
 
 describe('formatMoney', () => {
   it('uses R, a no-break space between thousands and a decimal comma', () => {
-    assert.equal(formatMoney(206666.666667), 'R\u00a0206\u00a0666,67')
-    assert.equal(formatMoney(3000), 'R\u00a03\u00a0000,00')
-    assert.equal(formatMoney(1240000), 'R\u00a01\u00a0240\u00a0000,00')
+    assert.equal(formatMoney(206666.666667), 'R206\u00a0666,67')
+    assert.equal(formatMoney(3000), 'R3\u00a0000,00')
+    assert.equal(formatMoney(1240000), 'R1\u00a0240\u00a0000,00')
   })
   it('shows a real zero as R 0,00 and a negative with a minus sign', () => {
-    assert.equal(formatMoney(0), 'R\u00a00,00')
-    assert.equal(formatMoney(-3000), '-R\u00a03\u00a0000,00')
+    assert.equal(formatMoney(0), 'R0,00')
+    assert.equal(formatMoney(-3000), '-R3\u00a0000,00')
+  })
+})
+
+describe('money spacing', () => {
+  it('has no space after R but keeps the no-break space between thousands groups', () => {
+    const formatted = formatMoney(206666.666667)
+    assert.equal(formatted, 'R206\u00a0666,67')
+    assert.equal(formatted.charAt(1), '2')
+    assert.equal(formatted.charAt(4), '\u00a0')
+    assert.equal(formatted.includes(' '), false)
+    assert.equal(formatMoney(1240000), 'R1\u00a0240\u00a0000,00')
   })
 })
 
@@ -31,11 +42,11 @@ describe('values that round to zero', () => {
   const NBSP = String.fromCharCode(0xa0)
 
   it('show no minus sign, while real negatives keep theirs', () => {
-    assert.equal(formatMoney(-0), `R${NBSP}0,00`)
-    assert.equal(formatMoney(-0.001), `R${NBSP}0,00`)
+    assert.equal(formatMoney(-0), `R0,00`)
+    assert.equal(formatMoney(-0.001), `R0,00`)
     assert.equal(formatPercent(-0.0001), '0,0%')
     assert.equal(formatPercent(-0), '0,0%')
-    assert.equal(formatMoney(-3000), `-R${NBSP}3${NBSP}000,00`)
+    assert.equal(formatMoney(-3000), `-R3${NBSP}000,00`)
     assert.equal(formatPercent(-0.07), '-7,0%')
   })
 })

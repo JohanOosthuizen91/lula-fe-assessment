@@ -34,13 +34,13 @@ The brief is deliberately open. Lula answered a few questions on 5 Oct 2026 (And
 | A10 | The risk band comes from the API and is never derived from the score. | Confirmed by Lula |
 | A11 | Assessment age is counted from today. There's no staleness rule, because it would flag every business. | My decision |
 
-Why A3 matters: Cape Foods' statements cover 6 months and the others cover 3. On raw totals Cape looks about twice Delta's size (R 1 240 000 against R 630 000 in); per month they're almost level (R 206 667 against R 210 000). The list and the bars use monthly averages; the detail also shows the statement totals, labelled with their period.
+Why A3 matters: Cape Foods' statements cover 6 months and the others cover 3. On raw totals Cape looks about twice Delta's size (R1 240 000 against R630 000 in); per month they're almost level (R206 667 against R210 000). The list and the bars use monthly averages; the detail also shows the statement totals, labelled with their period.
 
 Other decisions:
-- **Missing is never zero.** `null` means "not assessed yet" and is shown as "Awaiting assessment" or a muted dash with screen-reader text, never as 0 or R 0,00.
+- **Missing is never zero.** `null` means "not assessed yet" and is shown as "Awaiting assessment" or a muted dash with screen-reader text, never as 0 or R0,00.
 - **Bad data fails loudly, unknown labels don't.** Every API field is shape-checked; a wrong type throws rather than being guessed at. An unrecognised risk band or status is kept as its raw text, shown in a neutral style and flagged, so one new value doesn't take down the list.
 - **No all-clear without the data.** "No attention flags" appears only when every section loaded and had what its rules need. Otherwise the box says "Not fully checked" and names the rules it couldn't check and why.
-- **Formatting** is the official South African convention (`en-ZA`): R 206 666,67, 7,0%, 15 Nov 2024. Dates are formatted from their own parts, so the viewer's time zone can't shift them.
+- **Formatting** uses `Intl` with `en-ZA`: R206 666,67, 7,0%, 15 Nov 2024. Money uses en-ZA grouping (a no-break space) and decimal comma, with no space after R. That's house style: the CLDR default for en-ZA adds a space, but SA government and many banks write R206 666,67. Dates are formatted from their own parts, so the viewer's time zone can't shift them.
 - **Loading:** the list fetches all five collections in parallel and joins them in the browser, which is fine for a handful of businesses; in production I'd ask for a summary endpoint. The detail uses the documented filtered endpoints, one request per section, so one failing section doesn't blank the rest.
 
 ### Which businesses need attention
@@ -66,7 +66,7 @@ With the current data, Bright Construction is flagged for four reasons (High ban
 I worked with Claude Code (Opus) as a pair, one small step and one commit at a time: it wrote the code and ran the checks, and I reviewed each step and decided what went in. Around that I used Sonnet subagents that report but never edit:
 
 - **An independent test author** wrote the 43 tests for the assessment logic from the written rules and expected figures, without seeing the implementation. They passed first time; I then broke the code on purpose (period totals instead of monthly, flagging a category of exactly 40, the wrong tie-break) to confirm the tests catch it.
-- **A reviewer after every commit**, running the tests against `CLAUDE.md`. It caught real bugs: impossible dates such as 2024-02-30 being accepted and shown as 1 March; a connection dropping mid-response escaping as a raw error; a value that rounds to zero showing as "-R 0,00"; a future date described as "next month"; and, most important, the attention box showing a green "No attention flags" heading when a section hadn't loaded. That last one became its own commit.
+- **A reviewer after every commit**, running the tests against `CLAUDE.md`. It caught real bugs: impossible dates such as 2024-02-30 being accepted and shown as 1 March; a connection dropping mid-response escaping as a raw error; a value that rounds to zero showing as "-R0,00"; a future date described as "next month"; and, most important, the attention box showing a green "No attention flags" heading when a section hadn't loaded. That last one became its own commit.
 - **A visual checker** driving Chrome at 1440, 1280, 1024 and 375px, measuring rather than eyeballing. It found the list cramped at 1024 (so the side-by-side breakpoint moved to 1200px) and the stacked detail not scrolling into view after selection.
 - **`/code-review`** on the full diff at the end, and a security review (no findings).
 

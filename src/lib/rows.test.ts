@@ -29,7 +29,7 @@ describe('buildBusinessRows with the real data', () => {
     assert.equal(rows.length, 5)
   })
 
-  it('uses monthly figures: Cape Foods is R 206 666,67 a month, not its 6-month total', () => {
+  it('uses monthly figures: Cape Foods is R206 666,67 a month, not its 6-month total', () => {
     const cape = rowFor(rows, 'Cape Foods Distributors')
     assert.equal(cape.monthly?.months, 6)
     assert.equal(cape.monthly?.credits.toFixed(2), '206666.67')

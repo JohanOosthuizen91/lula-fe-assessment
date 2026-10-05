@@ -1,5 +1,6 @@
-// The only place values are formatted for display. Official South African convention (en-ZA):
-// R 206 666,67 with a no-break space as the thousands separator, a decimal comma, and 15 Nov 2024.
+// The only place values are formatted for display, using Intl with en-ZA: a no-break space between thousands
+// groups, a decimal comma, and dates like 15 Nov 2024. Money has no space after R (R206 666,67): house style, as the
+// CLDR en-ZA default adds one but SA government and many banks write it without.
 // Every formatter takes null and returns the same placeholder; null is never shown as 0.
 
 const LOCALE = 'en-ZA'
@@ -7,7 +8,7 @@ const LOCALE = 'en-ZA'
 /** Shown wherever a value is missing. */
 export const PLACEHOLDER = '—'
 
-// signDisplay 'negative': a value that rounds to zero (-0, -0.001) shows as R 0,00, never -R 0,00.
+// signDisplay 'negative': a value that rounds to zero (-0, -0.001) shows as R0,00, never -R0,00.
 const money = new Intl.NumberFormat(LOCALE, { style: 'currency', currency: 'ZAR', signDisplay: 'negative' })
 // Credit scores have no fixed scale; show the number as given, without inventing decimals.
 const creditScore = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 2 })
@@ -27,9 +28,17 @@ function orPlaceholder(value: number | null, format: (value: number) => string):
   return value === null || !Number.isFinite(value) ? PLACEHOLDER : format(value)
 }
 
-/** R 206 666,67 */
+/** Joins the parts, leaving out only the whitespace literal directly after the currency symbol. */
+function withoutSpaceAfterSymbol(parts: Intl.NumberFormatPart[]): string {
+  return parts
+    .filter((part, index) => !(part.type === 'literal' && part.value.trim() === '' && parts[index - 1]?.type === 'currency'))
+    .map((part) => part.value)
+    .join('')
+}
+
+/** R206 666,67 and -R3 000,00 (no-break spaces between thousands groups) */
 export function formatMoney(value: number | null): string {
-  return orPlaceholder(value, (v) => money.format(v))
+  return orPlaceholder(value, (v) => withoutSpaceAfterSymbol(money.formatToParts(v)))
 }
 
 /** 612 */

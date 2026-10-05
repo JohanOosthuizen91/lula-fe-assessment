@@ -17,7 +17,7 @@ financial picture, and which need attention. A wrong or overconfident number is 
 - Never edit data.json.
 
 ## Formatting
-- Official South African convention through `src/lib/format.ts` only: `R 206 666,67`, `68,5`, `15 Nov 2024`.
+- Format only through `src/lib/format.ts`: `R206 666,67`, `68,5`, `15 Nov 2024`. Money uses Intl en-ZA grouping (a no-break space) and decimal comma, with no space after R (house style; the CLDR default adds one).
 - Numbers are right-aligned with tabular figures. The one exception: on phones (640px and under) each list row becomes a card and its cells, numbers included, are left-aligned under their labels.
 
 ## React and TypeScript
